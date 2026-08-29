@@ -5,16 +5,5 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
-  datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
-
-  liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
+  mongodb:
+    uri: mongodb://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?authSource=admin
