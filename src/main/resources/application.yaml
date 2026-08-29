@@ -7,3 +7,8 @@ spring:
 
   mongodb:
     uri: mongodb://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?authSource=admin
+
+random-org:
+  base-url: "${RANDOM_ORG_BASE_URL:https://www.random.org}"
+  timeout-ms: "${RANDOM_ORG_TIMEOUT_MS:5000}"
+  integers-path: "${RANDOM_ORG_INTEGERS_PATH:/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new}"
