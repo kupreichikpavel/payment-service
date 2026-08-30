@@ -1,6 +1,6 @@
 package by.innowise.paymentservice.client;
 
-import by.innowise.paymentservice.client.RandomNumberClientImpl;
+import by.innowise.paymentservice.client.impl.RandomNumberClientImpl;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

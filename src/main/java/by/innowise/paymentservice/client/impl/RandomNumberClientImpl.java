@@ -1,4 +1,4 @@
-package by.innowise.paymentservice.client;
+package by.innowise.paymentservice.client.impl;
 
 import by.innowise.paymentservice.client.RandomNumberClient;
 import org.springframework.beans.factory.annotation.Qualifier;
