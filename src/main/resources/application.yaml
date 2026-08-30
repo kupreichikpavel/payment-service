@@ -8,7 +8,21 @@ spring:
   mongodb:
     uri: mongodb://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?authSource=admin
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      properties:
+        spring.json.add.type.headers: false
+
 random-org:
   base-url: "${RANDOM_ORG_BASE_URL:https://www.random.org}"
   timeout-ms: "${RANDOM_ORG_TIMEOUT_MS:5000}"
   integers-path: "${RANDOM_ORG_INTEGERS_PATH:/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new}"
+
+app:
+  kafka:
+    payment-events-topic: ${PAYMENT_EVENTS_TOPIC:payment-events}

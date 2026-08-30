@@ -5,7 +5,10 @@ import by.innowise.paymentservice.dto.PaymentRequestDto;
 import by.innowise.paymentservice.dto.PaymentResponseDto;
 import by.innowise.paymentservice.entity.Payment;
 import by.innowise.paymentservice.entity.PaymentStatus;
+import by.innowise.paymentservice.event.PaymentEvent;
+import by.innowise.paymentservice.event.PaymentEventType;
 import by.innowise.paymentservice.mapper.PaymentMapper;
+import by.innowise.paymentservice.producer.PaymentEventProducer;
 import by.innowise.paymentservice.repository.PaymentRepository;
 import by.innowise.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,7 @@ public class PaymentServiceImpl implements PaymentService {
   private final PaymentRepository paymentRepository;
   private final PaymentMapper paymentMapper;
   private final RandomNumberClient randomNumberClient;
+  private final PaymentEventProducer paymentEventProducer;
 
   @Override
   public PaymentResponseDto create(PaymentRequestDto requestDto) {
@@ -38,6 +42,17 @@ public class PaymentServiceImpl implements PaymentService {
     payment.setTimestamp(Instant.now());
 
     Payment savedPayment = paymentRepository.save(payment);
+
+    PaymentEvent event = new PaymentEvent(
+        PaymentEventType.CREATE_PAYMENT,
+        savedPayment.getId(),
+        savedPayment.getOrderId(),
+        savedPayment.getUserId(),
+        savedPayment.getStatus(),
+        savedPayment.getTimestamp()
+    );
+
+    paymentEventProducer.send(event);
 
     return paymentMapper.toDto(savedPayment);
   }
