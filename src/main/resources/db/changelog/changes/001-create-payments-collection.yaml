@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 001-create-payments-collection
       author: alexey
+
       changes:
         - createCollection:
             collectionName: payments
@@ -9,7 +10,7 @@ databaseChangeLog:
         - createIndex:
             collectionName: payments
             keys: '{ order_id: 1 }'
-            options: '{ name: "idx_payments_order_id" }'
+            options: '{ name: "ux_payments_order_id", unique: true }'
 
         - createIndex:
             collectionName: payments

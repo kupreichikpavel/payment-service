@@ -9,7 +9,8 @@ import by.innowise.paymentservice.event.PaymentEvent;
 import by.innowise.paymentservice.mapper.PaymentMapper;
 import by.innowise.paymentservice.producer.PaymentEventProducer;
 import by.innowise.paymentservice.repository.PaymentRepository;
-import by.innowise.paymentservice.service.PaymentServiceImpl;
+import by.innowise.paymentservice.repository.TotalAmountProjection;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -174,33 +175,83 @@ class PaymentServiceImplTest {
   }
 
   @Test
-  void getTotalAmountByUserIdAndPeriodShouldReturnSum() {
+  void getTotalAmountByUserIdAndPeriodShouldReturnTotalAmount() {
     Instant from = Instant.parse("2026-08-01T00:00:00Z");
-    Instant to = Instant.parse("2026-08-31T00:00:00Z");
+    Instant to = Instant.parse("2026-08-31T23:59:59Z");
 
-    List<Payment> payments = List.of(createPayment("1", 1L, 10L, "20.00"),
-        createPayment("2", 2L, 10L, "30.50"));
+    when(paymentRepository.sumAmountByUserIdAndPeriod(10L, from, to))
+        .thenReturn(Optional.of(
+            new TotalAmountProjection(new BigDecimal("150.00"))
+        ));
 
-    when(paymentRepository.findByUserIdAndTimestampBetween(10L, from, to)).thenReturn(payments);
+    BigDecimal result =
+        paymentService.getTotalAmountByUserIdAndPeriod(
+            10L,
+            from,
+            to
+        );
 
-    BigDecimal result = paymentService.getTotalAmountByUserIdAndPeriod(10L, from, to);
+    assertEquals(new BigDecimal("150.00"), result);
 
-    assertEquals(0, new BigDecimal("50.50").compareTo(result));
+    verify(paymentRepository)
+        .sumAmountByUserIdAndPeriod(10L, from, to);
   }
 
   @Test
-  void getTotalAmountForPeriodShouldReturnSum() {
+  void getTotalAmountByUserIdAndPeriodShouldReturnZeroWhenNoPaymentsFound() {
     Instant from = Instant.parse("2026-08-01T00:00:00Z");
-    Instant to = Instant.parse("2026-08-31T00:00:00Z");
+    Instant to = Instant.parse("2026-08-31T23:59:59Z");
 
-    List<Payment> payments = List.of(createPayment("1", 1L, 10L, "100.00"),
-        createPayment("2", 2L, 20L, "25.00"));
+    when(paymentRepository.sumAmountByUserIdAndPeriod(10L, from, to))
+        .thenReturn(Optional.empty());
 
-    when(paymentRepository.findByTimestampBetween(from, to)).thenReturn(payments);
+    BigDecimal result =
+        paymentService.getTotalAmountByUserIdAndPeriod(
+            10L,
+            from,
+            to
+        );
 
-    BigDecimal result = paymentService.getTotalAmountForPeriod(from, to);
+    assertEquals(BigDecimal.ZERO, result);
+  }
 
-    assertEquals(0, new BigDecimal("125.00").compareTo(result));
+  @Test
+  void getTotalAmountForPeriodShouldReturnTotalAmount() {
+    Instant from = Instant.parse("2026-08-01T00:00:00Z");
+    Instant to = Instant.parse("2026-08-31T23:59:59Z");
+
+    when(paymentRepository.sumAmountForPeriod(from, to))
+        .thenReturn(Optional.of(
+            new TotalAmountProjection(new BigDecimal("300.00"))
+        ));
+
+    BigDecimal result =
+        paymentService.getTotalAmountForPeriod(
+            from,
+            to
+        );
+
+    assertEquals(new BigDecimal("300.00"), result);
+
+    verify(paymentRepository)
+        .sumAmountForPeriod(from, to);
+  }
+
+  @Test
+  void getTotalAmountForPeriodShouldReturnZeroWhenNoPaymentsFound() {
+    Instant from = Instant.parse("2026-08-01T00:00:00Z");
+    Instant to = Instant.parse("2026-08-31T23:59:59Z");
+
+    when(paymentRepository.sumAmountForPeriod(from, to))
+        .thenReturn(Optional.empty());
+
+    BigDecimal result =
+        paymentService.getTotalAmountForPeriod(
+            from,
+            to
+        );
+
+    assertEquals(BigDecimal.ZERO, result);
   }
 
   private Payment createPayment(String id, Long orderId, Long userId, String amount) {

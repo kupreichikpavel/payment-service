@@ -10,6 +10,7 @@ import by.innowise.paymentservice.event.PaymentEventType;
 import by.innowise.paymentservice.mapper.PaymentMapper;
 import by.innowise.paymentservice.producer.PaymentEventProducer;
 import by.innowise.paymentservice.repository.PaymentRepository;
+import by.innowise.paymentservice.repository.TotalAmountProjection;
 import by.innowise.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -84,14 +85,10 @@ public class PaymentServiceImpl implements PaymentService {
       Instant from,
       Instant to
   ) {
-    List<Payment> payments =
-        paymentRepository.findByUserIdAndTimestampBetween(
-            userId,
-            from,
-            to
-        );
-
-    return calculateTotalAmount(payments);
+    return paymentRepository
+        .sumAmountByUserIdAndPeriod(userId, from, to)
+        .map(TotalAmountProjection::total)
+        .orElse(BigDecimal.ZERO);
   }
 
   @Override
@@ -99,15 +96,9 @@ public class PaymentServiceImpl implements PaymentService {
       Instant from,
       Instant to
   ) {
-    List<Payment> payments =
-        paymentRepository.findByTimestampBetween(from, to);
-
-    return calculateTotalAmount(payments);
-  }
-
-  private BigDecimal calculateTotalAmount(List<Payment> payments) {
-    return payments.stream()
-        .map(Payment::getPaymentAmount)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    return paymentRepository
+        .sumAmountForPeriod(from, to)
+        .map(TotalAmountProjection::total)
+        .orElse(BigDecimal.ZERO);
   }
 }

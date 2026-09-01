@@ -30,8 +30,10 @@ public class Payment {
   @Field("user_id")
   private Long userId;
 
+  @Field("status")
   private PaymentStatus status;
 
+  @Field("timestamp")
   private Instant timestamp;
 
   @Field(name = "payment_amount", targetType = FieldType.DECIMAL128)
