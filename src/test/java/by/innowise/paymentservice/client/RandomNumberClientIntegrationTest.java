@@ -1,6 +1,6 @@
 package by.innowise.paymentservice.client;
 
-import by.innowise.paymentservice.client.impl.RandomNumberClientImpl;
+import by.innowise.paymentservice.client.RandomNumberClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,7 @@ class RandomNumberClientIntegrationTest {
     RestClient restClient = RestClient.builder()
         .baseUrl("http://localhost:" + wireMockServer.port()).build();
 
-    randomNumberClient = new RandomNumberClientImpl(restClient, "/integers");
+    randomNumberClient = new RandomNumberClient(restClient, "/integers");
   }
 
   @AfterEach

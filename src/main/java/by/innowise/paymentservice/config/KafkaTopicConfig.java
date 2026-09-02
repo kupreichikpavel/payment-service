@@ -11,10 +11,11 @@ public class KafkaTopicConfig {
 
   @Bean
   public NewTopic paymentEventsTopic(
-      @Value("${app.kafka.payment-events-topic}") String topicName
+      @Value("${app.kafka.payment-events-topic}") String topicName,
+      @Value("${app.kafka.payment-events-partitions}") int partitions
   ) {
     return TopicBuilder.name(topicName)
-        .partitions(1)
+        .partitions(partitions)
         .replicas(1)
         .build();
   }

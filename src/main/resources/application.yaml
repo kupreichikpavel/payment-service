@@ -32,3 +32,5 @@ random-org:
 app:
   kafka:
     payment-events-topic: ${PAYMENT_EVENTS_TOPIC:payment-events}
+    payment-events-partitions: ${PAYMENT_EVENTS_PARTITIONS:1}
+    payment-events-replicas: ${PAYMENT_EVENTS_REPLICAS:1}
