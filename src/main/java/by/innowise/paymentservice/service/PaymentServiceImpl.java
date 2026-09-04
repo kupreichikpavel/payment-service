@@ -1,0 +1,104 @@
+package by.innowise.paymentservice.service;
+
+import by.innowise.paymentservice.client.RandomNumberClient;
+import by.innowise.paymentservice.dto.PaymentRequestDto;
+import by.innowise.paymentservice.dto.PaymentResponseDto;
+import by.innowise.paymentservice.entity.Payment;
+import by.innowise.paymentservice.entity.PaymentStatus;
+import by.innowise.paymentservice.event.PaymentEvent;
+import by.innowise.paymentservice.event.PaymentEventType;
+import by.innowise.paymentservice.mapper.PaymentMapper;
+import by.innowise.paymentservice.producer.PaymentEventProducer;
+import by.innowise.paymentservice.repository.PaymentRepository;
+import by.innowise.paymentservice.repository.TotalAmountProjection;
+import by.innowise.paymentservice.service.PaymentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class PaymentServiceImpl implements PaymentService {
+
+  private final PaymentRepository paymentRepository;
+  private final PaymentMapper paymentMapper;
+  private final RandomNumberClient randomNumberClient;
+  private final PaymentEventProducer paymentEventProducer;
+
+  @Override
+  public PaymentResponseDto create(PaymentRequestDto requestDto) {
+    Payment payment = paymentMapper.toEntity(requestDto);
+
+    int randomNumber = randomNumberClient.getRandomNumber();
+
+    payment.setStatus(
+        randomNumber % 2 == 0
+            ? PaymentStatus.SUCCESS
+            : PaymentStatus.FAILED
+    );
+
+    payment.setTimestamp(Instant.now());
+
+    Payment savedPayment = paymentRepository.save(payment);
+
+    PaymentEvent event = new PaymentEvent(
+        PaymentEventType.CREATE_PAYMENT,
+        savedPayment.getId(),
+        savedPayment.getOrderId(),
+        savedPayment.getUserId(),
+        savedPayment.getStatus(),
+        savedPayment.getTimestamp()
+    );
+
+    paymentEventProducer.send(event);
+
+    return paymentMapper.toDto(savedPayment);
+  }
+
+  @Override
+  public List<PaymentResponseDto> getByUserId(Long userId) {
+    return paymentMapper.toDtoList(
+        paymentRepository.findByUserId(userId)
+    );
+  }
+
+  @Override
+  public List<PaymentResponseDto> getByOrderId(Long orderId) {
+    return paymentMapper.toDtoList(
+        paymentRepository.findByOrderId(orderId)
+    );
+  }
+
+  @Override
+  public List<PaymentResponseDto> getByStatus(PaymentStatus status) {
+    return paymentMapper.toDtoList(
+        paymentRepository.findByStatus(status)
+    );
+  }
+
+  @Override
+  public BigDecimal getTotalAmountByUserIdAndPeriod(
+      Long userId,
+      Instant from,
+      Instant to
+  ) {
+    return paymentRepository
+        .sumAmountByUserIdAndPeriod(userId, from, to)
+        .map(TotalAmountProjection::total)
+        .orElse(BigDecimal.ZERO);
+  }
+
+  @Override
+  public BigDecimal getTotalAmountForPeriod(
+      Instant from,
+      Instant to
+  ) {
+    return paymentRepository
+        .sumAmountForPeriod(from, to)
+        .map(TotalAmountProjection::total)
+        .orElse(BigDecimal.ZERO);
+  }
+}
